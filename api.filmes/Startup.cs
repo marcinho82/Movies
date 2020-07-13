@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
+using api.filmes.DataContext;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using api.filmes.Services;
 
 namespace api.filmes
 {
@@ -20,6 +24,11 @@ namespace api.filmes
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<DbMoviesContext>(options => options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddScoped<DbContext, DbMoviesContext>();
+            services.AddScoped<UserService, UserService>();
+            services.AddScoped<MovieService, MovieService>();
+
             services.AddControllersWithViews();
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -29,8 +38,11 @@ namespace api.filmes
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DbContext dbContext)
         {
+            //migrations
+            dbContext.Database.Migrate();
+           
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
